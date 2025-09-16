@@ -1,0 +1,14 @@
+# Python build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+
+# Node build artifacts
+waveform_player/frontend/build/
+waveform_player/frontend/node_modules/
+
+# IDE and OS files
+.idea/
+.vscode/
+.DS_Store
