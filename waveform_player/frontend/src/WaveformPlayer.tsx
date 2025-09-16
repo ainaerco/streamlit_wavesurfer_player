@@ -62,9 +62,11 @@ const WaveformPlayer = (props: any) => {
       })
       wavesurfer.current.on("timeupdate", (time) => {
         setCurrentTime(time)
+        Streamlit.setComponentValue(time)
       })
       wavesurfer.current.on("seeking", (time) => {
         setCurrentTime(time)
+        Streamlit.setComponentValue(time)
       });
       
       wavesurfer.current.on("play", () => setIsPlaying(true))

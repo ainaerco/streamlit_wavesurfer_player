@@ -1,6 +1,7 @@
-import os
-import streamlit.components.v1 as components
 import base64
+import os
+
+import streamlit.components.v1 as components
 
 _RELEASE = True
 
@@ -14,7 +15,10 @@ else:
     build_dir = os.path.join(parent_dir, "frontend/build")
     _component_func = components.declare_component("waveform_player", path=build_dir)
 
-def waveform_player(audio_bytes: bytes, key=None, height: int = 120, show_controls: bool = True):
+
+def waveform_player(
+    audio_bytes: bytes, key=None, height: int = 120, show_controls: bool = True
+):
     """Create a new instance of "waveform_player".
 
     Parameters
@@ -36,9 +40,10 @@ def waveform_player(audio_bytes: bytes, key=None, height: int = 120, show_contro
         height=height,
         show_controls=show_controls,
         key=key,
-        default=0
+        default=0,
     )
     return component_value
+
 
 if not _RELEASE:
     import streamlit as st
