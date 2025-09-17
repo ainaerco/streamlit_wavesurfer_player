@@ -29,56 +29,64 @@ const WaveformPlayer = (props: any) => {
   const { audio_b64, height } = props.args
 
   useEffect(() => {
-    if (waveformRef.current) {
+    if (!waveformRef.current) return;
+
+    wavesurfer.current = WaveSurfer.create({
+      container: waveformRef.current,
+      waveColor: "#6c757d",
+      progressColor: "#ff9900",
+      height: height,
+      barWidth: 2,
+      barGap: 1,
+      cursorWidth: 2,
+      cursorColor: "#fff",
+      backend: 'MediaElement',
+      dragToSeek: true,
+    });
+
+    wavesurfer.current.on("ready", () => {
       if (wavesurfer.current) {
-        wavesurfer.current.destroy()
+        setTotalDuration(wavesurfer.current.getDuration());
       }
+    });
 
-      wavesurfer.current = WaveSurfer.create({
-        container: waveformRef.current,
-        waveColor: "#6c757d",
-        progressColor: "#ff9900",
-        height: height,
-        barWidth: 2,
-        barGap: 1,
-        cursorWidth: 2,
-        cursorColor: "#fff",
-        backend: 'MediaElement',
-        dragToSeek: true,
-      })
+    wavesurfer.current.on("timeupdate", (time) => {
+      setCurrentTime(time);
+    });
 
+    wavesurfer.current.on("seeking", (time) => {
+      setCurrentTime(time);
+      Streamlit.setComponentValue(time);
+    });
+
+    wavesurfer.current.on("pause", () => {
+      if (wavesurfer.current) {
+        const time = wavesurfer.current.getCurrentTime();
+        setCurrentTime(time);
+        Streamlit.setComponentValue(time);
+      }
+      setIsPlaying(false);
+    });
+
+    wavesurfer.current.on("play", () => setIsPlaying(true));
+
+    return () => {
+      if (wavesurfer.current) {
+        wavesurfer.current.destroy();
+      }
+    };
+  }, [height]);
+
+  useEffect(() => {
+    if (wavesurfer.current && audio_b64) {
       try {
         const audioBlob = new Blob([Uint8Array.from(atob(audio_b64), c => c.charCodeAt(0))]);
-        wavesurfer.current.loadBlob(audioBlob)
+        wavesurfer.current.loadBlob(audioBlob);
       } catch (e) {
-        console.error("Error decoding or loading audio data:", e)
-        return;
-      }
-
-      wavesurfer.current.on("ready", () => {
-        if (wavesurfer.current) {
-          setTotalDuration(wavesurfer.current.getDuration())
-        }
-      })
-      wavesurfer.current.on("timeupdate", (time) => {
-        setCurrentTime(time)
-        Streamlit.setComponentValue(time)
-      })
-      wavesurfer.current.on("seeking", (time) => {
-        setCurrentTime(time)
-        Streamlit.setComponentValue(time)
-      });
-      
-      wavesurfer.current.on("play", () => setIsPlaying(true))
-      wavesurfer.current.on("pause", () => setIsPlaying(false))
-
-      return () => {
-        if (wavesurfer.current) {
-          wavesurfer.current.destroy()
-        }
+        console.error("Error decoding or loading audio data:", e);
       }
     }
-  }, [audio_b64, height])
+  }, [audio_b64]);
 
   const handlePlayPause = () => {
     if (wavesurfer.current) {
