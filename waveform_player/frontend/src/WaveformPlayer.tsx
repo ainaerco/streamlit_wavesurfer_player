@@ -25,6 +25,7 @@ const WaveformPlayer = (props: any) => {
   const [currentTime, setCurrentTime] = useState(0)
   const [totalDuration, setTotalDuration] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
+  const [volume, setVolume] = useState(1); // Default volume: 100%
 
   const { audio_b64, height } = props.args
 
@@ -88,6 +89,12 @@ const WaveformPlayer = (props: any) => {
     }
   }, [audio_b64]);
 
+  useEffect(() => {
+    if (wavesurfer.current) {
+      wavesurfer.current.setVolume(volume);
+    }
+  }, [volume]);
+
   const handlePlayPause = () => {
     if (wavesurfer.current) {
       wavesurfer.current.playPause()
@@ -108,7 +115,12 @@ const WaveformPlayer = (props: any) => {
     <div style={{ background: "#212529", padding: "20px", borderRadius: "8px", color: "white" }}>
       <div ref={waveformRef} />
       {show_controls && (
-        <div style={{ marginTop: "15px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{
+          marginTop: "15px",
+          display: "flex",
+          alignItems: "center",
+          gap: "20px"
+        }}>
           <button onClick={handlePlayPause} style={{
             background: "#007bff",
             color: "white",
@@ -116,27 +128,40 @@ const WaveformPlayer = (props: any) => {
             borderRadius: "5px",
             padding: "10px 20px",
             fontSize: "16px",
-            cursor: "pointer",
+            cursor: "pointer"
           }}>
             {isPlaying ? "Pause" : "Play"}
           </button>
-          <div style={{ fontFamily: "monospace" }}>
-            {formatTime(currentTime)} / {formatTime(totalDuration)}
-          </div>
-          <div>
-            <label htmlFor="speed-select" style={{ marginRight: "10px" }}>Speed:</label>
+          <label htmlFor="speed-select" style={{ whiteSpace: "nowrap" }}>
             <select id="speed-select" value={playbackRate} onChange={handleSpeedChange} style={{
-                background: "#444",
-                color: "white",
-                border: "1px solid #666",
-                borderRadius: "5px",
-                padding: "5px",
+              background: "#444",
+              color: "white",
+              border: "1px solid #666",
+              borderRadius: "5px",
+              padding: "5px",
+              marginLeft: "5px"
             }}>
               <option value="0.5">0.5x</option>
               <option value="1">1x</option>
               <option value="1.5">1.5x</option>
               <option value="2">2x</option>
             </select>
+          </label>
+          <label htmlFor="volume-slider" style={{ whiteSpace: "nowrap" }}>
+            Volume:
+            <input
+              id="volume-slider"
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={volume}
+              onChange={e => setVolume(Number(e.target.value))}
+              style={{ width: '100px', marginLeft: "5px", verticalAlign: "middle" }}
+            />
+          </label>
+          <div style={{ fontFamily: "monospace", marginLeft: "auto", whiteSpace: "nowrap" }}>
+            {formatTime(currentTime)} / {formatTime(totalDuration)}
           </div>
         </div>
       )}
