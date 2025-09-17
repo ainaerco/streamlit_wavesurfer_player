@@ -95,6 +95,21 @@ const WaveformPlayer = (props: any) => {
     }
   }, [volume]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!wavesurfer.current) return;
+      if (e.key === "ArrowRight") {
+        const newTime = Math.min(wavesurfer.current.getCurrentTime() + 1, wavesurfer.current.getDuration());
+        wavesurfer.current.seekTo(newTime / wavesurfer.current.getDuration());
+      } else if (e.key === "ArrowLeft") {
+        const newTime = Math.max(wavesurfer.current.getCurrentTime() - 1, 0);
+        wavesurfer.current.seekTo(newTime / wavesurfer.current.getDuration());
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handlePlayPause = () => {
     if (wavesurfer.current) {
       wavesurfer.current.playPause()
