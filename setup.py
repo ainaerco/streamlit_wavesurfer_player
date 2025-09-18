@@ -6,8 +6,8 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
-    name="streamlit-waveform-player",
-    version="0.0.1",
+    name="streamlit-wavesurfer-player",
+    version="0.1.0",
     author="Gemini",
     author_email="",
     description="Streamlit component to display an audio waveform and play audio.",

@@ -5,8 +5,8 @@ dist/
 __pycache__/
 
 # Node build artifacts
-waveform_player/frontend/build/
-waveform_player/frontend/node_modules/
+wavesurfer_player/frontend/build/
+wavesurfer_player/frontend/node_modules/
 
 # IDE and OS files
 .idea/

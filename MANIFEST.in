@@ -1,1 +1,1 @@
-recursive-include waveform_player/frontend/build *
+recursive-include wavesurfer_player/frontend/build *
