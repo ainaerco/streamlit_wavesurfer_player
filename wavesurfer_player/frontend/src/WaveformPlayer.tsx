@@ -26,6 +26,8 @@ const WaveformPlayer = (props: any) => {
   const [totalDuration, setTotalDuration] = useState(0)
   const [playbackRate, setPlaybackRate] = useState(1)
   const [volume, setVolume] = useState(1); // Default volume: 100%
+  const [stickyLoop, setStickyLoop] = useState(false);
+  const stickyLoopRef = useRef(stickyLoop);
 
   const { audio_b64, height } = props.args
 
@@ -48,6 +50,15 @@ const WaveformPlayer = (props: any) => {
     wavesurfer.current.on("ready", () => {
       if (wavesurfer.current) {
         setTotalDuration(wavesurfer.current.getDuration());
+        // Apply sticky loop to the underlying media element if requested
+        try {
+          const media = (wavesurfer.current as any).media as HTMLMediaElement | undefined
+          if (media) {
+            media.loop = stickyLoopRef.current
+          }
+        } catch (e) {
+          // ignore if backend doesn't expose media directly
+        }
       }
     });
 
@@ -77,6 +88,61 @@ const WaveformPlayer = (props: any) => {
       }
     };
   }, [height]);
+
+  // keep the ref in sync so the ready handler can read the latest value
+  useEffect(() => {
+    stickyLoopRef.current = stickyLoop
+  }, [stickyLoop]);
+
+  // Memoize finishHandler to avoid unnecessary re-registrations
+  const finishHandler = React.useCallback(() => {
+    if (stickyLoop && wavesurfer.current) {
+      try {
+        (wavesurfer.current as any).seekTo(0)
+        (wavesurfer.current as any).play()
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, [stickyLoop]);
+
+  // Keep loop state synced to the media element when stickyLoop changes
+  // Extracted loop setup logic for readability and testability
+  const setupLoopState = () => {
+    if (!wavesurfer.current) return;
+    try {
+      const media = (wavesurfer.current as any).media as HTMLMediaElement | undefined;
+      if (media) {
+        media.loop = stickyLoop;
+      } else {
+        // fallback: if no direct media element, try to use wavesurfer's backend methods
+        // For backends that don't expose a media element, add/remove a 'finish' handler
+        const ws: any = wavesurfer.current;
+
+        // remove previous listener first to avoid duplicates
+        try {
+          ws.un('finish', finishHandler);
+        } catch (e) {
+          // ignore if un() not supported
+        }
+
+        if (stickyLoop) {
+          try {
+            ws.on('finish', finishHandler);
+          } catch (e) {
+            // ignore
+          }
+        }
+      }
+    } catch (e) {
+      // ignore errors setting loop
+    }
+  };
+
+  // Keep loop state synced to the media element when stickyLoop changes
+  useEffect(() => {
+    setupLoopState();
+  }, [stickyLoop, finishHandler]);
 
   useEffect(() => {
     if (wavesurfer.current && audio_b64) {
@@ -146,6 +212,21 @@ const WaveformPlayer = (props: any) => {
             cursor: "pointer"
           }}>
             {isPlaying ? "Pause" : "Play"}
+          </button>
+          <button
+            onClick={() => setStickyLoop(s => !s)}
+            title="Sticky loop (toggle)"
+            style={{
+              background: stickyLoop ? "#28a745" : "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: "5px",
+              padding: "8px 12px",
+              fontSize: "14px",
+              cursor: "pointer"
+            }}
+          >
+            {stickyLoop ? "Loop: On" : "Loop: Off"}
           </button>
           <label htmlFor="speed-select" style={{ whiteSpace: "nowrap" }}>
             <select id="speed-select" value={playbackRate} onChange={handleSpeedChange} style={{
